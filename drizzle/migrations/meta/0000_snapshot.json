@@ -137,12 +137,8 @@
           "name": "job_listings_organizationId_organizations_id_fk",
           "tableFrom": "job_listings",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "organizationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organizationId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -210,12 +206,8 @@
           "name": "job_listing_applications_jobListingId_job_listings_id_fk",
           "tableFrom": "job_listing_applications",
           "tableTo": "job_listings",
-          "columnsFrom": [
-            "jobListingId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jobListingId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -223,12 +215,8 @@
           "name": "job_listing_applications_userId_users_id_fk",
           "tableFrom": "job_listing_applications",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -236,10 +224,7 @@
       "compositePrimaryKeys": {
         "job_listing_applications_userId_jobListingId_pk": {
           "name": "job_listing_applications_userId_jobListingId_pk",
-          "columns": [
-            "userId",
-            "jobListingId"
-          ]
+          "columns": ["userId", "jobListingId"]
         }
       },
       "uniqueConstraints": {},
@@ -342,12 +327,8 @@
           "name": "organization_user_settings_userId_users_id_fk",
           "tableFrom": "organization_user_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -355,12 +336,8 @@
           "name": "organization_user_settings_organizationId_organizations_id_fk",
           "tableFrom": "organization_user_settings",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "organizationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organizationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -368,10 +345,7 @@
       "compositePrimaryKeys": {
         "organization_user_settings_userId_organizationId_pk": {
           "name": "organization_user_settings_userId_organizationId_pk",
-          "columns": [
-            "userId",
-            "organizationId"
-          ]
+          "columns": ["userId", "organizationId"]
         }
       },
       "uniqueConstraints": {},
@@ -429,9 +403,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -482,12 +454,8 @@
           "name": "user_notification_settings_userId_users_id_fk",
           "tableFrom": "user_notification_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -547,12 +515,8 @@
           "name": "user_resumes_userId_users_id_fk",
           "tableFrom": "user_resumes",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -568,57 +532,32 @@
     "public.job_listings_experience_level": {
       "name": "job_listings_experience_level",
       "schema": "public",
-      "values": [
-        "junior",
-        "mid-level",
-        "senior"
-      ]
+      "values": ["junior", "mid-level", "senior"]
     },
     "public.job_listings_status": {
       "name": "job_listings_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "published",
-        "delisted"
-      ]
+      "values": ["draft", "published", "delisted"]
     },
     "public.job_listings_type": {
       "name": "job_listings_type",
       "schema": "public",
-      "values": [
-        "internship",
-        "part-time",
-        "full-time"
-      ]
+      "values": ["internship", "part-time", "full-time"]
     },
     "public.job_listings_location_requirement": {
       "name": "job_listings_location_requirement",
       "schema": "public",
-      "values": [
-        "remote",
-        "in-office",
-        "hybrid"
-      ]
+      "values": ["remote", "in-office", "hybrid"]
     },
     "public.job_listings_wage_interval": {
       "name": "job_listings_wage_interval",
       "schema": "public",
-      "values": [
-        "hourly",
-        "yearly"
-      ]
+      "values": ["hourly", "yearly"]
     },
     "public.job_listing_application_stage": {
       "name": "job_listing_application_stage",
       "schema": "public",
-      "values": [
-        "denied",
-        "applied",
-        "interested",
-        "interviewed",
-        "hired"
-      ]
+      "values": ["denied", "applied", "interested", "interviewed", "hired"]
     }
   },
   "schemas": {},

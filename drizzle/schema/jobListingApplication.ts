@@ -7,7 +7,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { UserTable } from 'drizzle/schema';
+import { UserTable } from 'drizzle/schema/user';
 import { JobListingTable } from 'drizzle/schema/jobListing';
 import { createdAt, updatedAt } from 'drizzle/schemaHelpers';
 

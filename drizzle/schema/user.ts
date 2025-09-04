@@ -1,10 +1,8 @@
 import { relations } from 'drizzle-orm';
 import { pgTable, varchar } from 'drizzle-orm/pg-core';
-import {
-  OrganizationUserSettingsTable,
-  UserNotificationSettingsTable,
-  UserResumeTable,
-} from 'drizzle/schema';
+import { OrganizationUserSettingsTable } from 'drizzle/schema/organizationUserSetting';
+import { UserNotificationSettingsTable } from 'drizzle/schema/userNotificationSettings';
+import { UserResumeTable } from 'drizzle/schema/userResume';
 import { createdAt, updatedAt } from 'drizzle/schemaHelpers';
 
 export const UserTable = pgTable('users', {

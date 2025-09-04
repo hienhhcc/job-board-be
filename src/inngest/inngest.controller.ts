@@ -10,8 +10,8 @@ export class InngestController {
     return this.inngestService.inngestHandler(req, res);
   }
 
-  // @All('*')
-  // handle(@Req() req: Request, @Res() res: Response): Promise<void> {
-  //   return this.inngestService.inngestHandler(req, res);
-  // }
+  @All('*')
+  handle(@Req() req: Request, @Res() res: Response): Promise<void> {
+    return this.inngestService.inngestHandler(req, res);
+  }
 }

@@ -17,7 +17,7 @@ export class DrizzleService {
   public async insertUser(user: typeof UserTable.$inferInsert) {
     await this.db.insert(UserTable).values(user).onConflictDoNothing();
   }
-  public async insertUserNotificationSetting(
+  public async insertUserNotificationSettings(
     settings: typeof schema.UserNotificationSettingsTable.$inferInsert,
   ) {
     await this.db

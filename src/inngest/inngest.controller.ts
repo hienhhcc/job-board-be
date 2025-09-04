@@ -5,9 +5,13 @@ import { InngestService } from 'src/inngest/inngest.service';
 export class InngestController {
   constructor(private readonly inngestService: InngestService) {}
 
-  @All('*')
-  async handle(@Req() req: Request, @Res() res: Response): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await this.inngestService.inngestHandler(req, res);
+  @All()
+  root(@Req() req: Request, @Res() res: Response) {
+    return this.inngestService.inngestHandler(req, res);
   }
+
+  // @All('*')
+  // handle(@Req() req: Request, @Res() res: Response): Promise<void> {
+  //   return this.inngestService.inngestHandler(req, res);
+  // }
 }

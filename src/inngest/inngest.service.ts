@@ -1,14 +1,14 @@
-// src/inngest/inngest.service.ts
 import { Injectable } from '@nestjs/common';
 import { DeletedObjectJSON, UserJSON } from '@clerk/backend';
 import { EventSchemas, Inngest } from 'inngest';
 import { serve } from 'inngest/express';
 import { NonRetriableError } from 'inngest';
 import { Webhook } from 'svix';
+import { ConfigService } from '@nestjs/config';
+import { DrizzleService } from 'src/drizzle/drizzle.service';
 // import { insertUser } from 'features/users/db/users';
 // import { insertUserNotificationSettings } from 'features/users/db/userNotificationSettings';
 
-// ---- Event Types ----
 type ClerkWebhookData<T> = {
   data: {
     data: T;
@@ -25,6 +25,11 @@ type Events = {
 
 @Injectable()
 export class InngestService {
+  constructor(
+    private config: ConfigService,
+    private drizzle: DrizzleService,
+  ) {}
+
   private inngest = new Inngest({
     id: 'work-hive',
     schemas: new EventSchemas().fromRecord<Events>(),
@@ -37,10 +42,9 @@ export class InngestService {
     raw: string;
     headers: Record<string, string>;
   }) {
-    return new Webhook(process.env.CLERK_WEBHOOK_SIGNING_SECRET!).verify(
-      raw,
-      headers,
-    );
+    return new Webhook(
+      this.config.get<string>('CLERK_WEBHOOK_SIGNING_SECRET') as string,
+    ).verify(raw, headers);
   }
 
   clerkCreateUser = this.inngest.createFunction(
@@ -71,30 +75,29 @@ export class InngestService {
           throw new NonRetriableError('No primary email address found');
         }
 
-        // await insertUser({
-        //   id: userData.id,
-        //   name: `${userData.first_name} ${userData.last_name}`,
-        //   imageUrl: userData.image_url,
-        //   email: email.email_address,
-        //   createdAt: new Date(userData.created_at),
-        //   updatedAt: new Date(userData.updated_at),
-        // });
+        await this.drizzle.insertUser({
+          id: userData.id,
+          name: `${userData.first_name} ${userData.last_name}`,
+          imageUrl: userData.image_url,
+          email: email.email_address,
+          createdAt: new Date(userData.created_at),
+          updatedAt: new Date(userData.updated_at),
+        });
 
         return userData.id;
       });
 
-      // await step.run('create-user-notification-settings', async () => {
-      //   await insertUserNotificationSettings({ userId });
-      // });
+      await step.run('create-user-notification-settings', async () => {
+        await this.drizzle.insertUserNotificationSettings({ userId });
+      });
     },
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public inngestHandler(_req: Request, _res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  public inngestHandler(req: Request, res: Response): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return serve({
       client: this.inngest,
       functions: [this.clerkCreateUser],
-    });
+    })(req, res);
   }
 }

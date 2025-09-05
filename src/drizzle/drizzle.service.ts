@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from 'drizzle/schema';
 import { UserTable } from 'drizzle/schema';
@@ -14,9 +15,22 @@ export class DrizzleService {
       { schema },
     );
   }
+  //* User
   public async insertUser(user: typeof UserTable.$inferInsert) {
     await this.db.insert(UserTable).values(user).onConflictDoNothing();
   }
+
+  public async updateUser(
+    id: string,
+    user: Partial<typeof UserTable.$inferInsert>,
+  ) {
+    await this.db.update(UserTable).set(user).where(eq(UserTable.id, id));
+  }
+
+  public async deleteUser(id: string) {
+    await this.db.delete(UserTable).where(eq(UserTable.id, id));
+  }
+
   public async insertUserNotificationSettings(
     settings: typeof schema.UserNotificationSettingsTable.$inferInsert,
   ) {

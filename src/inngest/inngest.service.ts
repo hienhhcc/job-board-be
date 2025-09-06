@@ -6,8 +6,6 @@ import { NonRetriableError } from 'inngest';
 import { Webhook } from 'svix';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
-// import { insertUser } from 'features/users/db/users';
-// import { insertUserNotificationSettings } from 'features/users/db/userNotificationSettings';
 
 type ClerkWebhookData<T> = {
   data: {
@@ -188,6 +186,64 @@ export class InngestService {
     },
   );
 
+  clerkUpdateOrganization = this.inngest.createFunction(
+    {
+      id: 'clerk/update-db-organization',
+      name: 'Clerk - Update DB Organization',
+    },
+    { event: 'clerk/organization.updated' },
+    async ({ event, step }) => {
+      await step.run('verify-webhook', async () => {
+        try {
+          await this.verifyWebHook({
+            raw: event.data.raw,
+            headers: event.data.headers,
+          });
+        } catch {
+          throw new NonRetriableError('Invalid webhook');
+        }
+      });
+
+      await step.run('update-organization', async () => {
+        const orgData = event.data.data;
+
+        await this.drizzle.updateOrganization(orgData.id, {
+          name: orgData.name,
+          imageUrl: orgData.image_url,
+          updatedAt: new Date(orgData.updated_at),
+        });
+      });
+    },
+  );
+
+  clerkDeleteOrganization = this.inngest.createFunction(
+    {
+      id: 'clerk/delete-db-organization',
+      name: 'Clerk - Delete DB Organization',
+    },
+    {
+      event: 'clerk/organization.deleted',
+    },
+    async ({ event, step }) => {
+      await step.run('verify-webhook', async () => {
+        await this.verifyWebHook({
+          raw: event.data.raw,
+          headers: event.data.headers,
+        });
+      });
+
+      await step.run('delete-organization', async () => {
+        const { id } = event.data.data;
+
+        if (id == null) {
+          throw new NonRetriableError('No id found');
+        }
+
+        await this.drizzle.deleteOrganization(id);
+      });
+    },
+  );
+
   public inngestHandler(req: Request, res: Response): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return serve({
@@ -197,8 +253,8 @@ export class InngestService {
         this.clerkUpdateUser,
         this.clerkDeleteUser,
         this.clerkCreateOrganization,
-        // this.clerkUpdateOrganization,
-        // this.clerkDeleteOrganization,
+        this.clerkUpdateOrganization,
+        this.clerkDeleteOrganization,
       ],
     })(req, res);
   }

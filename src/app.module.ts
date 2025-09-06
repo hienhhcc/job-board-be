@@ -6,6 +6,7 @@ import { InngestModule } from 'src/inngest/inngest.module';
 import { UserModule } from './user/user.module';
 import { ClerkModule } from './clerk/clerk.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
     InngestModule,
     UserModule,
     ClerkModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

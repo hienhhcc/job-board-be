@@ -1,3 +1,4 @@
+import { OrganizationTable } from './../../drizzle/schema/organization';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { eq } from 'drizzle-orm';
@@ -51,5 +52,32 @@ export class DrizzleService {
       .insert(schema.UserNotificationSettingsTable)
       .values(settings)
       .onConflictDoNothing();
+  }
+
+  //* Organization
+  public async getOrganization(id: string) {
+    const result = await this.db.query.OrganizationTable.findFirst({
+      where: eq(OrganizationTable.id, id),
+    });
+
+    return result;
+  }
+
+  public async insertOrganization(org: typeof OrganizationTable.$inferInsert) {
+    await this.db.insert(OrganizationTable).values(org).onConflictDoNothing();
+  }
+
+  public async updateOrganization(
+    id: string,
+    user: Partial<typeof OrganizationTable.$inferInsert>,
+  ) {
+    await this.db
+      .update(OrganizationTable)
+      .set(user)
+      .where(eq(OrganizationTable.id, id));
+  }
+
+  public async deleteOrganization(id: string) {
+    await this.db.delete(OrganizationTable).where(eq(OrganizationTable.id, id));
   }
 }

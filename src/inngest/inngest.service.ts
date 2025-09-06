@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DeletedObjectJSON, UserJSON } from '@clerk/backend';
+import { DeletedObjectJSON, OrganizationJSON, UserJSON } from '@clerk/backend';
 import { EventSchemas, Inngest } from 'inngest';
 import { serve } from 'inngest/express';
 import { NonRetriableError } from 'inngest';
@@ -21,6 +21,9 @@ type Events = {
   'clerk/user.created': ClerkWebhookData<UserJSON>;
   'clerk/user.updated': ClerkWebhookData<UserJSON>;
   'clerk/user.deleted': ClerkWebhookData<DeletedObjectJSON>;
+  'clerk/organization.created': ClerkWebhookData<OrganizationJSON>;
+  'clerk/organization.updated': ClerkWebhookData<OrganizationJSON>;
+  'clerk/organization.deleted': ClerkWebhookData<DeletedObjectJSON>;
 };
 
 @Injectable()
@@ -153,14 +156,49 @@ export class InngestService {
     },
   );
 
+  clerkCreateOrganization = this.inngest.createFunction(
+    {
+      id: 'clerk/create-db-organization',
+      name: 'Clerk - Create DB Organization',
+    },
+    { event: 'clerk/organization.created' },
+    async ({ event, step }) => {
+      await step.run('verify-webhook', async () => {
+        try {
+          await this.verifyWebHook({
+            raw: event.data.raw,
+            headers: event.data.headers,
+          });
+        } catch {
+          throw new NonRetriableError('Invalid webhook');
+        }
+      });
+
+      await step.run('create-organization', async () => {
+        const orgData = event.data.data;
+
+        await this.drizzle.insertOrganization({
+          id: orgData.id,
+          name: orgData.name,
+          imageUrl: orgData.image_url,
+          createdAt: new Date(orgData.created_at),
+          updatedAt: new Date(orgData.updated_at),
+        });
+      });
+    },
+  );
+
   public inngestHandler(req: Request, res: Response): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return serve({
       client: this.inngest,
       functions: [
         this.clerkCreateUser,
         this.clerkUpdateUser,
         this.clerkDeleteUser,
+        this.clerkCreateOrganization,
+        // this.clerkUpdateOrganization,
+        // this.clerkDeleteOrganization,
       ],
     })(req, res);
   }

@@ -28,12 +28,7 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid Clerk session');
       }
 
-      // if (!userId || !sessionId)
-      //   throw new UnauthorizedException('Invalid Clerk session');
-
-      // // Attach to request for downstream usage
-      // (req as any).userId = userId;
-      // (req as any).sessionId = sessionId;
+      (request as any).auth = authenticate.toAuth();
 
       return true;
     } catch (err) {

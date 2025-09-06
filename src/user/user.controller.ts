@@ -1,6 +1,8 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from 'src/clerk/auth.guard';
+import type { SignedInAuthObject } from '@clerk/backend/internal';
+import { Auth } from 'src/user/decorators/auth.decorator';
 
 @Controller('user')
 export class UserController {
@@ -8,8 +10,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('/me')
-  getMe() {
-    return 'hello';
-    // return this.userService.getMe();
+  getMe(@Auth() auth: SignedInAuthObject) {
+    return this.userService.getMe(auth.userId);
   }
 }

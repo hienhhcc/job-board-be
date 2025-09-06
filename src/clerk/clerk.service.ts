@@ -22,8 +22,6 @@ export class ClerkService {
     return this.clerkClient.authenticateRequest(req, {
       jwtKey,
       authorizedParties: ['http://localhost:3000'],
-      // secretKey: this.config.get('CLERK_SECRET_KEY'),
-      // acceptsToken: ['session_token'],
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -16,6 +16,19 @@ export class DrizzleService {
     );
   }
   //* User
+  public async getMe(id: string) {
+    const [user] = await this.db
+      .select()
+      .from(UserTable)
+      .where(eq(UserTable.id, id));
+
+    if (!user) {
+      throw new NotFoundException('No user found');
+    }
+
+    return user;
+  }
+
   public async insertUser(user: typeof UserTable.$inferInsert) {
     await this.db.insert(UserTable).values(user).onConflictDoNothing();
   }

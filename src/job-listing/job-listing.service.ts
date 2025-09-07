@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { JobListingTable } from 'drizzle/schema';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
 import { InsertJobListingDto } from 'src/job-listing/dto/insert-job-listing.dto';
@@ -30,5 +30,14 @@ export class JobListingService {
     }
 
     return newListing;
+  }
+
+  async getJobListingById(orgId: string, jobListingId: string) {
+    return this.drizzle.db.query.JobListingTable.findFirst({
+      where: and(
+        eq(JobListingTable.id, jobListingId),
+        eq(JobListingTable.organizationId, orgId),
+      ),
+    });
   }
 }

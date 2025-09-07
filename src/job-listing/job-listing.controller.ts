@@ -4,16 +4,23 @@ import { AuthGuard } from 'src/clerk/auth.guard';
 import { InsertJobListingDto } from 'src/job-listing/dto/insert-job-listing.dto';
 
 @Controller('job-listing')
+@UseGuards(AuthGuard)
 export class JobListingController {
   constructor(private readonly jobListingService: JobListingService) {}
 
-  @UseGuards(AuthGuard)
   @Get('/org/:orgId/recent')
   getMostRecentJobListing(@Param('orgId') orgId: string) {
     return this.jobListingService.getMostRecentJobListing(orgId);
   }
 
-  @UseGuards(AuthGuard)
+  @Get('/org/:orgId/:jobListingId')
+  getJobListingById(
+    @Param('orgId') orgId: string,
+    @Param('jobListingId') jobListingId: string,
+  ) {
+    return this.jobListingService.getJobListingById(orgId, jobListingId);
+  }
+
   @Post('/org/:orgId')
   insertJobListing(
     @Param('orgId') orgId: string,

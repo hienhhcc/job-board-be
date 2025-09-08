@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JobListingService } from './job-listing.service';
 import { AuthGuard } from 'src/clerk/auth.guard';
 import { InsertJobListingDto } from 'src/job-listing/dto/insert-job-listing.dto';
@@ -19,6 +27,14 @@ export class JobListingController {
     @Param('jobListingId') jobListingId: string,
   ) {
     return this.jobListingService.getJobListingById(orgId, jobListingId);
+  }
+
+  @Patch('/org/:orgId/:jobListingId')
+  updateJobListing(
+    @Param('jobListingId') jobListingId: string,
+    @Body() data: Partial<InsertJobListingDto>,
+  ) {
+    return this.jobListingService.updateJobListing(jobListingId, data);
   }
 
   @Post('/org/:orgId')

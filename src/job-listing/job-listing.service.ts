@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { JobListingTable } from 'drizzle/schema';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
@@ -39,5 +43,21 @@ export class JobListingService {
         eq(JobListingTable.organizationId, orgId),
       ),
     });
+  }
+
+  async updateJobListing(id: string, data: Partial<InsertJobListingDto>) {
+    const [updatedJobListing] = await this.drizzle.db
+      .update(JobListingTable)
+      .set(data)
+      .where(eq(JobListingTable.id, id))
+      .returning({
+        id: JobListingTable.id,
+        organizationId: JobListingTable.organizationId,
+      });
+
+    if (!updatedJobListing)
+      throw new NotFoundException('Cannot update job listing');
+
+    return { success: true, updatedJobListing };
   }
 }

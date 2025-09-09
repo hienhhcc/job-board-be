@@ -31,6 +31,11 @@ export class OrganizationController {
     return this.organizationService.countPublishedJobListings(orgId);
   }
 
+  @Get(':orgId/job-listing/count-featured')
+  countFeaturedJobListings(@Param('orgId') orgId: string) {
+    return this.organizationService.countFeaturedJobListings(orgId);
+  }
+
   @Get(':orgId/job-listing/recent')
   getMostRecentJobListing(@Param('orgId') orgId: string) {
     return this.organizationService.getMostRecentJobListing(orgId);

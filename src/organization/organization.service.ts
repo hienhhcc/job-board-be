@@ -93,4 +93,18 @@ export class OrganizationService {
 
     return res?.count ?? 0;
   }
+
+  async countFeaturedJobListings(orgId: string) {
+    const [res] = await this.drizzle.db
+      .select({ count: count() })
+      .from(JobListingTable)
+      .where(
+        and(
+          eq(JobListingTable.organizationId, orgId),
+          eq(JobListingTable.isFeatured, true),
+        ),
+      );
+
+    return res?.count ?? 0;
+  }
 }

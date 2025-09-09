@@ -58,9 +58,16 @@ export class OrganizationService {
   }
 
   async updateJobListing(id: string, data: Partial<InsertJobListingDto>) {
+    const updatedData = {
+      ...data,
+      postedAt:
+        data.postedAt && typeof data.postedAt === 'string'
+          ? new Date(data.postedAt)
+          : undefined,
+    };
     const [updatedJobListing] = await this.drizzle.db
       .update(JobListingTable)
-      .set(data)
+      .set(updatedData)
       .where(eq(JobListingTable.id, id))
       .returning({
         id: JobListingTable.id,

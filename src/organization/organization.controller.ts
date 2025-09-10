@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -55,6 +56,11 @@ export class OrganizationController {
     @Body() data: Partial<InsertJobListingDto>,
   ) {
     return this.organizationService.updateJobListing(jobListingId, data);
+  }
+
+  @Delete('/:orgId/job-listing/:jobListingId')
+  deleteJobListingById(@Param('jobListingId') jobListingId: string) {
+    return this.organizationService.deleteJobListingById(jobListingId);
   }
 
   @Post('/:orgId/job-listing')

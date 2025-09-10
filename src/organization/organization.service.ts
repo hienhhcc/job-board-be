@@ -80,6 +80,20 @@ export class OrganizationService {
     return { success: true, updatedJobListing };
   }
 
+  async deleteJobListingById(id: string) {
+    const [deletedJobListing] = await this.drizzle.db
+      .delete(JobListingTable)
+      .where(eq(JobListingTable.id, id))
+      .returning({
+        id: JobListingTable.id,
+        organizationId: JobListingTable.organizationId,
+      });
+
+    if (!deletedJobListing) return { success: false, deletedJobListing: null };
+
+    return { success: true, deletedJobListing };
+  }
+
   async countPublishedJobListings(orgId: string) {
     const [res] = await this.drizzle.db
       .select({ count: count() })

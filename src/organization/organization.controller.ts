@@ -27,27 +27,27 @@ export class OrganizationController {
     return this.organizationService.getCurrentOrganization(orgId, auth);
   }
 
-  @Get('/:orgId/job-listing')
+  @Get('/:orgId/job-listings')
   getJobListings(@Param('orgId') orgId: string) {
     return this.organizationService.getJobListings(orgId);
   }
 
-  @Get(':orgId/job-listing/count-published')
+  @Get(':orgId/job-listings/count-published')
   countPublishedJobListings(@Param('orgId') orgId: string) {
     return this.organizationService.countPublishedJobListings(orgId);
   }
 
-  @Get(':orgId/job-listing/count-featured')
+  @Get(':orgId/job-listings/count-featured')
   countFeaturedJobListings(@Param('orgId') orgId: string) {
     return this.organizationService.countFeaturedJobListings(orgId);
   }
 
-  @Get(':orgId/job-listing/recent')
+  @Get(':orgId/job-listings/recent')
   getMostRecentJobListing(@Param('orgId') orgId: string) {
     return this.organizationService.getMostRecentJobListing(orgId);
   }
 
-  @Get('/:orgId/job-listing/:jobListingId')
+  @Get('/:orgId/job-listings/:jobListingId')
   getJobListingById(
     @Param('orgId') orgId: string,
     @Param('jobListingId') jobListingId: string,
@@ -55,7 +55,7 @@ export class OrganizationController {
     return this.organizationService.getJobListingById(orgId, jobListingId);
   }
 
-  @Patch('/:orgId/job-listing/:jobListingId')
+  @Patch('/:orgId/job-listings/:jobListingId')
   updateJobListing(
     @Param('jobListingId') jobListingId: string,
     @Body() data: Partial<InsertJobListingDto>,
@@ -63,12 +63,12 @@ export class OrganizationController {
     return this.organizationService.updateJobListing(jobListingId, data);
   }
 
-  @Delete('/:orgId/job-listing/:jobListingId')
+  @Delete('/:orgId/job-listings/:jobListingId')
   deleteJobListingById(@Param('jobListingId') jobListingId: string) {
     return this.organizationService.deleteJobListingById(jobListingId);
   }
 
-  @Post('/:orgId/job-listing')
+  @Post('/:orgId/job-listings')
   insertJobListing(
     @Param('orgId') orgId: string,
     @Body() data: InsertJobListingDto,

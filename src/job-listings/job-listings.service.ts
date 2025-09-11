@@ -31,6 +31,22 @@ export class JobListingService {
       whereConditions.push(eq(JobListingTable.stateAbbreviation, query.state));
     }
 
+    if (query.experience) {
+      whereConditions.push(
+        eq(JobListingTable.experienceLevel, query.experience),
+      );
+    }
+
+    if (query.type) {
+      whereConditions.push(eq(JobListingTable.type, query.type));
+    }
+
+    if (query.jobIds) {
+      whereConditions.push(
+        or(...query.jobIds.map((jobId) => eq(JobListingTable.id, jobId))),
+      );
+    }
+
     const jobListings = await this.drizzle.db.query.JobListingTable.findMany({
       where: or(
         jobListingId

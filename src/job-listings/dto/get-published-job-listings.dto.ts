@@ -1,7 +1,15 @@
 import { Transform } from 'class-transformer';
 import { IsOptional, IsString, IsArray, IsEnum } from 'class-validator';
-import type { LocationRequirement } from 'drizzle/schema';
-import { locationRequirements } from 'drizzle/schema';
+import type {
+  LocationRequirement,
+  ExperienceLevel,
+  JobListingType,
+} from 'drizzle/schema';
+import {
+  experienceLevels,
+  jobListingTypes,
+  locationRequirements,
+} from 'drizzle/schema';
 
 export class GetPublishedJobListingQuery {
   @IsString()
@@ -19,6 +27,14 @@ export class GetPublishedJobListingQuery {
   @IsString()
   @IsOptional()
   state?: string;
+
+  @IsEnum(experienceLevels)
+  @IsOptional()
+  experience?: ExperienceLevel;
+
+  @IsEnum(jobListingTypes)
+  @IsOptional()
+  type?: JobListingType;
 
   @IsString()
   @IsOptional()

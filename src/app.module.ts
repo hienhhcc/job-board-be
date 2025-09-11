@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { ClerkModule } from './clerk/clerk.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { OrganizationModule } from './organization/organization.module';
+import { JobListingModule } from './job-listings/job-listings.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { OrganizationModule } from './organization/organization.module';
     UserModule,
     ClerkModule,
     OrganizationModule,
+    JobListingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

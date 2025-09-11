@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { and, count, desc, eq } from 'drizzle-orm';
+import { JobListingApplicationTable } from 'drizzle/schema';
 import { JobListingTable } from 'drizzle/schema/jobListing';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
 import { InsertJobListingDto } from 'src/organization/dto/insert-job-listing.dto';
@@ -22,6 +23,34 @@ export class OrganizationService {
     }
 
     return this.drizzle.getOrganization(id);
+  }
+
+  async getJobListings(orgId: string) {
+    const data = await this.drizzle.db
+      .select({
+        id: JobListingTable.id,
+        title: JobListingTable.title,
+        status: JobListingTable.status,
+        applicationCount: count(JobListingApplicationTable.userId),
+      })
+      .from(JobListingTable)
+      .where(eq(JobListingTable.organizationId, orgId))
+      .leftJoin(
+        JobListingApplicationTable,
+        eq(JobListingTable.id, JobListingApplicationTable.jobListingId),
+      )
+      .groupBy(JobListingApplicationTable.jobListingId, JobListingTable.id)
+      .orderBy(desc(JobListingTable.createdAt));
+
+    if (!data) {
+      return {
+        error: true,
+        data: null,
+        message: 'There was an error getting job listings',
+      };
+    }
+
+    return { error: false, data };
   }
 
   async getMostRecentJobListing(orgId: string) {

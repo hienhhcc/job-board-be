@@ -27,6 +27,11 @@ export class OrganizationController {
     return this.organizationService.getCurrentOrganization(orgId, auth);
   }
 
+  @Get('/:orgId/job-listing')
+  getJobListings(@Param('orgId') orgId: string) {
+    return this.organizationService.getJobListings(orgId);
+  }
+
   @Get(':orgId/job-listing/count-published')
   countPublishedJobListings(@Param('orgId') orgId: string) {
     return this.organizationService.countPublishedJobListings(orgId);

@@ -3,11 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { and, desc, eq, ilike, or, SQL } from 'drizzle-orm';
 import { JobListingApplicationTable, JobListingTable } from 'drizzle/schema';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
+import { InngestService } from 'src/inngest/inngest.service';
 import { GetPublishedJobListingQuery } from 'src/job-listings/dto/get-published-job-listings.dto';
 
 @Injectable()
 export class JobListingService {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly inngestService: InngestService,
+  ) {}
 
   async getPublishedJobListings(query: GetPublishedJobListingQuery) {
     const whereConditions: (SQL | undefined)[] = [];
@@ -124,5 +128,40 @@ export class JobListingService {
         ),
       });
     return { success: true, data: jobListingApplication };
+  }
+
+  async insertJobListingApplication(
+    jobListingId: string,
+    auth: SignedInAuthObject,
+    coverLetter: string | undefined,
+  ) {
+    const insertedJobListingApplication = await this.drizzle.db
+      .insert(JobListingApplicationTable)
+      .values({
+        jobListingId,
+        userId: auth.userId,
+        coverLetter,
+      })
+      .onConflictDoNothing({
+        target: [
+          JobListingApplicationTable.jobListingId,
+          JobListingApplicationTable.userId,
+        ],
+      });
+
+    if (insertedJobListingApplication == null) {
+      return {
+        success: false,
+        message: 'There was an error inserting job listing application',
+      };
+    }
+
+    //TODO: AI Generation
+    await this.inngestService.inngest.send({
+      name: 'app/jobListingApplication.created',
+      data: { jobListingId, userId: auth.userId },
+    });
+
+    return { success: true, data: insertedJobListingApplication };
   }
 }

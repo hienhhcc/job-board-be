@@ -22,6 +22,12 @@ type Events = {
   'clerk/organization.created': ClerkWebhookData<OrganizationJSON>;
   'clerk/organization.updated': ClerkWebhookData<OrganizationJSON>;
   'clerk/organization.deleted': ClerkWebhookData<DeletedObjectJSON>;
+  'app/jobListingApplication.created': {
+    data: {
+      jobListingId: string;
+      userId: string;
+    };
+  };
 };
 
 @Injectable()
@@ -31,7 +37,7 @@ export class InngestService {
     private drizzle: DrizzleService,
   ) {}
 
-  private inngest = new Inngest({
+  public inngest = new Inngest({
     id: 'work-hive',
     schemas: new EventSchemas().fromRecord<Events>(),
   });
@@ -245,7 +251,6 @@ export class InngestService {
   );
 
   public inngestHandler(req: Request, res: Response): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return serve({
       client: this.inngest,
       functions: [

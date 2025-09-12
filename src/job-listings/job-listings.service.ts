@@ -1,6 +1,7 @@
+import type { SignedInAuthObject } from '@clerk/backend/internal';
 import { Injectable } from '@nestjs/common';
 import { and, desc, eq, ilike, or, SQL } from 'drizzle-orm';
-import { JobListingTable } from 'drizzle/schema';
+import { JobListingApplicationTable, JobListingTable } from 'drizzle/schema';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
 import { GetPublishedJobListingQuery } from 'src/job-listings/dto/get-published-job-listings.dto';
 
@@ -82,5 +83,46 @@ export class JobListingService {
       success: true,
       data: jobListings,
     };
+  }
+
+  async getPublishedJobListingById(jobListingId: string) {
+    const jobListing = await this.drizzle.db.query.JobListingTable.findFirst({
+      where: and(
+        eq(JobListingTable.id, jobListingId),
+        eq(JobListingTable.status, 'published'),
+      ),
+      with: {
+        organization: {
+          columns: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+      },
+    });
+
+    if (jobListing == null) {
+      return { success: false, message: 'Job listing not found' };
+    }
+
+    return {
+      success: true,
+      data: jobListing,
+    };
+  }
+
+  async getJobListingApplicationByJobListingIdAndUserId(
+    jobListingId: string,
+    auth: SignedInAuthObject,
+  ) {
+    const jobListingApplication =
+      await this.drizzle.db.query.JobListingApplicationTable.findFirst({
+        where: and(
+          eq(JobListingApplicationTable.jobListingId, jobListingId),
+          eq(JobListingApplicationTable.userId, auth.userId),
+        ),
+      });
+    return { success: true, data: jobListingApplication };
   }
 }

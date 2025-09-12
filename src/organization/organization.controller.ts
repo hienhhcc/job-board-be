@@ -15,10 +15,10 @@ import { AuthGuard } from 'src/clerk/auth.guard';
 import { InsertJobListingDto } from 'src/organization/dto/insert-job-listing.dto';
 
 @Controller('/org')
+@UseGuards(AuthGuard)
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
 
-  @UseGuards(AuthGuard)
   @Get(':orgId')
   getCurrentOrganization(
     @Param('orgId') orgId: string,

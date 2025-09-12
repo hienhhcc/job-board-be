@@ -28,6 +28,11 @@ type Events = {
       userId: string;
     };
   };
+  'app/resume.uploaded': {
+    data: {
+      id: string;
+    };
+  };
 };
 
 @Injectable()

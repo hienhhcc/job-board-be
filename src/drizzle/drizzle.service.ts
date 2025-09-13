@@ -31,7 +31,17 @@ export class DrizzleService {
   }
 
   public async insertUser(user: typeof UserTable.$inferInsert) {
-    await this.db.insert(UserTable).values(user).onConflictDoNothing();
+    const [insertedUser] = await this.db
+      .insert(UserTable)
+      .values(user)
+      .onConflictDoNothing()
+      .returning();
+
+    await this.db.insert(schema.UserNotificationSettingsTable).values({
+      aiPrompt: null,
+      userId: insertedUser.id,
+      newJobEmailNotifications: true,
+    });
   }
 
   public async updateUser(

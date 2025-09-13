@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DeletedObjectJSON, OrganizationJSON, UserJSON } from '@clerk/backend';
-import { EventSchemas, Inngest } from 'inngest';
+import { EventSchemas, GetEvents, Inngest } from 'inngest';
 import { serve } from 'inngest/express';
 import { NonRetriableError } from 'inngest';
 import { Webhook } from 'svix';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
+import { and, eq, gte } from 'drizzle-orm';
+import { JobListingTable, UserNotificationSettingsTable } from 'drizzle/schema';
+import { subDays } from 'date-fns';
+import { ResendService } from 'src/resend/resend.service';
 
 type ClerkWebhookData<T> = {
   data: {
@@ -33,6 +37,19 @@ type Events = {
       id: string;
     };
   };
+  'app/email.daily-user-job-listings': {
+    data: {
+      aiPrompt?: string;
+      jobListings: (Omit<
+        typeof JobListingTable.$inferSelect,
+        'createdAt' | 'postedAt' | 'updatedAt' | 'status' | 'organizationId'
+      > & { organizationName: string })[];
+    };
+    user: {
+      email: string;
+      name: string;
+    };
+  };
 };
 
 @Injectable()
@@ -40,6 +57,7 @@ export class InngestService {
   constructor(
     private config: ConfigService,
     private drizzle: DrizzleService,
+    private resendService: ResendService,
   ) {}
 
   public inngest = new Inngest({
@@ -255,6 +273,129 @@ export class InngestService {
     },
   );
 
+  prepareDailyUserJobListingNotifications = this.inngest.createFunction(
+    {
+      id: 'prepare-daily-user-job-listing-notifications',
+      name: 'Prepare Daily User Job Listing Notifications',
+    },
+    {
+      cron: 'TZ=Asia/Ho_Chi_Minh 0 7 * * *',
+    },
+    async ({ step, event }) => {
+      const getUsers = step.run('get-users', async () => {
+        return this.drizzle.db.query.UserNotificationSettingsTable.findMany({
+          where: eq(
+            UserNotificationSettingsTable.newJobEmailNotifications,
+            true,
+          ),
+          columns: {
+            userId: true,
+            newJobEmailNotifications: true,
+            aiPrompt: true,
+          },
+          with: {
+            user: {
+              columns: {
+                email: true,
+                name: true,
+              },
+            },
+          },
+        });
+      });
+
+      const getJobListings = step.run('get-recent-job-listings', async () => {
+        return await this.drizzle.db.query.JobListingTable.findMany({
+          where: and(
+            gte(
+              JobListingTable.postedAt,
+              subDays(new Date(event.ts ?? Date.now()), 1),
+            ),
+            eq(JobListingTable.status, 'published'),
+          ),
+          columns: {
+            createdAt: false,
+            postedAt: false,
+            updatedAt: false,
+            status: false,
+            organizationId: false,
+          },
+          with: {
+            organization: {
+              columns: {
+                name: true,
+              },
+            },
+          },
+        });
+      });
+
+      const [userNotifications, jobListings] = await Promise.all([
+        getUsers,
+        getJobListings,
+      ]);
+
+      if (jobListings.length === 0 || userNotifications.length === 0) return;
+
+      const events = userNotifications.map((notification) => {
+        return {
+          name: 'app/email.daily-user-job-listings',
+          user: {
+            email: notification.user.email,
+            name: notification.user.name,
+          },
+          data: {
+            aiPrompt: notification.aiPrompt ?? undefined,
+            jobListings: jobListings.map((listing) => {
+              return {
+                ...listing,
+                organizationName: listing.organization.name,
+              };
+            }),
+          },
+        } as const satisfies GetEvents<
+          typeof this.inngest
+        >['app/email.daily-user-job-listings'];
+      });
+
+      await step.sendEvent('send-emails', events);
+    },
+  );
+
+  sendDailyUserJobListingEmail = this.inngest.createFunction(
+    {
+      id: 'send-daily-user-job-listing-email',
+      name: 'Send Daily User Job Listing Email',
+      throttle: {
+        limit: 10,
+        period: '1m',
+      },
+    },
+    { event: 'app/email.daily-user-job-listings' },
+    async ({ event, step }) => {
+      const { jobListings } = event.data;
+      const user = event.user;
+
+      if (jobListings.length === 0) return;
+
+      const matchingJobListings = jobListings;
+
+      if (matchingJobListings.length === 0) return;
+
+      await step.run('send-email', async () => {
+        await this.resendService.resend.emails.send({
+          from: 'Job Board <onboarding@resend.dev>',
+          to: user.email,
+          subject: 'Daily Job Listings',
+          html: this.resendService.buildDailyJobListingEmail(
+            user.name,
+            jobListings,
+            this.config.get('SERVER_URL')!,
+          ),
+        });
+      });
+    },
+  );
   public inngestHandler(req: Request, res: Response): Promise<void> {
     return serve({
       client: this.inngest,
@@ -265,6 +406,8 @@ export class InngestService {
         this.clerkCreateOrganization,
         this.clerkUpdateOrganization,
         this.clerkDeleteOrganization,
+        this.sendDailyUserJobListingEmail,
+        this.prepareDailyUserJobListingNotifications,
       ],
     })(req, res);
   }

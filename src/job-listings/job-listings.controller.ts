@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -29,7 +30,7 @@ export class JobListingController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/:jobListingId/application')
+  @Get('/:jobListingId/applications')
   getJobListingApplicationByJobListingIdAndUserId(
     @Param('jobListingId') jobListingId: string,
     @Auth() auth: SignedInAuthObject,
@@ -41,7 +42,7 @@ export class JobListingController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('/:jobListingId/application')
+  @Post('/:jobListingId/applications')
   insertJobListingApplication(
     @Param('jobListingId') jobListingId: string,
     @Auth() auth: SignedInAuthObject,
@@ -51,6 +52,20 @@ export class JobListingController {
       jobListingId,
       auth,
       body.coverLetter,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('/:jobListingId/applications/:userId')
+  updateJobListingApplication(
+    @Param('jobListingId') jobListingId: string,
+    @Param('userId') userId: string,
+    @Body() body: Partial<InsertJobListingApplicationDto>,
+  ) {
+    return this.jobListingService.updateJobListingApplication(
+      jobListingId,
+      userId,
+      body,
     );
   }
 }

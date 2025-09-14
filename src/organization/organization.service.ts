@@ -205,4 +205,40 @@ export class OrganizationService {
 
     return res?.count ?? 0;
   }
+
+  async getJobListingApplicationsByJobListingId(
+    organizationId: string,
+    jobListingId: string,
+  ) {
+    const data =
+      await this.drizzle.db.query.JobListingApplicationTable.findMany({
+        where: eq(JobListingApplicationTable.jobListingId, jobListingId),
+        columns: {
+          coverLetter: true,
+          createdAt: true,
+          stage: true,
+          rating: true,
+          jobListingId: true,
+        },
+        with: {
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              imageUrl: true,
+            },
+            with: {
+              resume: {
+                columns: {
+                  resumeFileUrl: true,
+                  aiSummary: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+    return data;
+  }
 }

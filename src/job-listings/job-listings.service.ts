@@ -5,6 +5,7 @@ import { JobListingApplicationTable, JobListingTable } from 'drizzle/schema';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
 import { InngestService } from 'src/inngest/inngest.service';
 import { GetPublishedJobListingQuery } from 'src/job-listings/dto/get-published-job-listings.dto';
+import { InsertJobListingApplicationDto } from 'src/job-listings/dto/insert-job-listing-application.dto';
 
 @Injectable()
 export class JobListingService {
@@ -157,5 +158,31 @@ export class JobListingService {
     }
 
     return { success: true, data: insertedJobListingApplication };
+  }
+
+  async updateJobListingApplication(
+    jobListingId: string,
+    userId: string,
+    data: Partial<InsertJobListingApplicationDto>,
+  ) {
+    const [updatedApplication] = await this.drizzle.db
+      .update(JobListingApplicationTable)
+      .set(data)
+      .where(
+        and(
+          eq(JobListingApplicationTable.jobListingId, jobListingId),
+          eq(JobListingApplicationTable.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (updatedApplication == null) {
+      return {
+        success: false,
+        message: 'There was an error while updating application',
+      };
+    }
+
+    return { success: true, data: updatedApplication };
   }
 }

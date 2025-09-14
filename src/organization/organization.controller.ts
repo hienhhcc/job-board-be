@@ -112,4 +112,15 @@ export class OrganizationController {
   ) {
     return this.organizationService.insertJobListing(orgId, data);
   }
+
+  @Get('/:orgId/job-listings/:jobListingId/applications')
+  getJobListingApplicationsByJobListingId(
+    @Param('orgId') orgId: string,
+    @Param('jobListingId') jobListingId: string,
+  ) {
+    return this.organizationService.getJobListingApplicationsByJobListingId(
+      orgId,
+      jobListingId,
+    );
+  }
 }

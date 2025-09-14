@@ -1,7 +1,7 @@
 import { OrganizationTable } from './../../drizzle/schema/organization';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from 'drizzle/schema';
 import { UserTable } from 'drizzle/schema';
@@ -89,5 +89,35 @@ export class DrizzleService {
 
   public async deleteOrganization(id: string) {
     await this.db.delete(OrganizationTable).where(eq(OrganizationTable.id, id));
+  }
+
+  //* Organization User Settings
+  public async insertOrganizationUserSettings(
+    settings: typeof schema.OrganizationUserSettingsTable.$inferInsert,
+  ) {
+    await this.db
+      .insert(schema.OrganizationUserSettingsTable)
+      .values(settings)
+      .onConflictDoNothing();
+  }
+
+  public async deleteOrganizationUserSettings({
+    userId,
+    organizationId,
+  }: {
+    userId: string;
+    organizationId: string;
+  }) {
+    await this.db
+      .delete(schema.OrganizationUserSettingsTable)
+      .where(
+        and(
+          eq(schema.OrganizationUserSettingsTable.userId, userId),
+          eq(
+            schema.OrganizationUserSettingsTable.organizationId,
+            organizationId,
+          ),
+        ),
+      );
   }
 }

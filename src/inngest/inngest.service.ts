@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { DeletedObjectJSON, OrganizationJSON, UserJSON } from '@clerk/backend';
+import {
+  DeletedObjectJSON,
+  OrganizationJSON,
+  OrganizationMembershipJSON,
+  UserJSON,
+} from '@clerk/backend';
 import { EventSchemas, GetEvents, Inngest } from 'inngest';
 import { serve } from 'inngest/express';
 import { NonRetriableError } from 'inngest';
@@ -26,6 +31,8 @@ type Events = {
   'clerk/organization.created': ClerkWebhookData<OrganizationJSON>;
   'clerk/organization.updated': ClerkWebhookData<OrganizationJSON>;
   'clerk/organization.deleted': ClerkWebhookData<DeletedObjectJSON>;
+  'clerk/organizationMembership.created': ClerkWebhookData<OrganizationMembershipJSON>;
+  'clerk/organizationMembership.deleted': ClerkWebhookData<OrganizationMembershipJSON>;
   'app/jobListingApplication.created': {
     data: {
       jobListingId: string;
@@ -273,6 +280,66 @@ export class InngestService {
     },
   );
 
+  clerkCreateOrgMembership = this.inngest.createFunction(
+    {
+      id: 'clerk/create-organization-user-settings',
+      name: 'Clerk - Create Organization User Settings',
+    },
+    { event: 'clerk/organizationMembership.created' },
+    async ({ event, step }) => {
+      await step.run('verify-webhook', async () => {
+        try {
+          await this.verifyWebHook({
+            raw: event.data.raw,
+            headers: event.data.headers,
+          });
+        } catch {
+          throw new NonRetriableError('Invalid webhook');
+        }
+      });
+
+      await step.run('create-organization-user-settings', async () => {
+        const userId = event.data.data.public_user_data.user_id;
+        const orgId = event.data.data.organization.id;
+
+        await this.drizzle.insertOrganizationUserSettings({
+          userId,
+          organizationId: orgId,
+        });
+      });
+    },
+  );
+
+  clerkDeleteOrgMembership = this.inngest.createFunction(
+    {
+      id: 'clerk/delete-organization-user-settings',
+      name: 'Clerk - Delete Organization User Settings',
+    },
+    { event: 'clerk/organizationMembership.deleted' },
+    async ({ event, step }) => {
+      await step.run('verify-webhook', async () => {
+        try {
+          await this.verifyWebHook({
+            raw: event.data.raw,
+            headers: event.data.headers,
+          });
+        } catch {
+          throw new NonRetriableError('Invalid webhook');
+        }
+      });
+
+      await step.run('delete-organization-user-settings', async () => {
+        const userId = event.data.data.public_user_data.user_id;
+        const orgId = event.data.data.organization.id;
+
+        await this.drizzle.deleteOrganizationUserSettings({
+          userId,
+          organizationId: orgId,
+        });
+      });
+    },
+  );
+
   prepareDailyUserJobListingNotifications = this.inngest.createFunction(
     {
       id: 'prepare-daily-user-job-listing-notifications',
@@ -408,6 +475,8 @@ export class InngestService {
         this.clerkDeleteOrganization,
         this.sendDailyUserJobListingEmail,
         this.prepareDailyUserJobListingNotifications,
+        this.clerkCreateOrgMembership,
+        this.clerkDeleteOrgMembership,
       ],
     })(req, res);
   }

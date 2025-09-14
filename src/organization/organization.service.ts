@@ -6,14 +6,69 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { and, count, desc, eq } from 'drizzle-orm';
-import { JobListingApplicationTable } from 'drizzle/schema';
+import {
+  JobListingApplicationTable,
+  OrganizationUserSettingsTable,
+} from 'drizzle/schema';
 import { JobListingTable } from 'drizzle/schema/jobListing';
 import { DrizzleService } from 'src/drizzle/drizzle.service';
 import { InsertJobListingDto } from 'src/organization/dto/insert-job-listing.dto';
+import { UpdateOrganizationUserSettingsDto } from 'src/organization/dto/update-organization-user-settings.dto';
 
 @Injectable()
 export class OrganizationService {
   constructor(private readonly drizzle: DrizzleService) {}
+
+  async getOrganizationUserSettings(orgId: string, userId: string) {
+    const result =
+      await this.drizzle.db.query.OrganizationUserSettingsTable.findFirst({
+        where: and(
+          eq(OrganizationUserSettingsTable.userId, userId),
+          eq(OrganizationUserSettingsTable.organizationId, orgId),
+        ),
+        columns: {
+          newApplicationEmailNotifications: true,
+          minimumRating: true,
+        },
+      });
+
+    if (result == null) {
+      return { success: false, message: 'User settings not found' };
+    }
+
+    return { success: true, data: result };
+  }
+
+  async updateOrganizationUserSettings({
+    userId,
+    organizationId,
+    data,
+  }: {
+    userId: string;
+    organizationId: string;
+    data: UpdateOrganizationUserSettingsDto;
+  }) {
+    const [updatedData] = await this.drizzle.db
+      .insert(OrganizationUserSettingsTable)
+      .values({ ...data, userId, organizationId })
+      .onConflictDoUpdate({
+        target: [
+          OrganizationUserSettingsTable.userId,
+          OrganizationUserSettingsTable.organizationId,
+        ],
+        set: data,
+      })
+      .returning();
+
+    if (updatedData == null) {
+      return {
+        success: false,
+        message: 'There was an error updating organization user settings',
+      };
+    }
+
+    return { success: true, data: updatedData };
+  }
 
   getCurrentOrganization(id: string, auth: SignedInAuthObject) {
     if (id !== auth.orgId) {

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,6 +14,7 @@ import { Auth } from 'src/user/decorators/auth.decorator';
 import type { SignedInAuthObject } from '@clerk/backend/internal';
 import { AuthGuard } from 'src/clerk/auth.guard';
 import { InsertJobListingDto } from 'src/organization/dto/insert-job-listing.dto';
+import { UpdateOrganizationUserSettingsDto } from 'src/organization/dto/update-organization-user-settings.dto';
 
 @Controller('/org')
 @UseGuards(AuthGuard)
@@ -26,7 +28,42 @@ export class OrganizationController {
   ) {
     return this.organizationService.getCurrentOrganization(orgId, auth);
   }
+  //* Users UserSettings
+  @Get(':orgId/user/:userId/settings')
+  getOrganizationUserSettings(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+    @Auth() auth: SignedInAuthObject,
+  ) {
+    if (userId !== auth.userId) {
+      return new BadRequestException(
+        'You dont have permission to perform this action',
+      );
+    }
 
+    return this.organizationService.getOrganizationUserSettings(orgId, userId);
+  }
+
+  @Patch('/:orgId/user/:userId/settings')
+  updateOrganizationUserSettings(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+    @Body() data: UpdateOrganizationUserSettingsDto,
+    @Auth() auth: SignedInAuthObject,
+  ) {
+    if (userId !== auth.userId) {
+      return new BadRequestException(
+        'You dont have permission to perform this action',
+      );
+    }
+
+    return this.organizationService.updateOrganizationUserSettings({
+      userId,
+      organizationId: orgId,
+      data,
+    });
+  }
+  //* Job Listings
   @Get('/:orgId/job-listings')
   getJobListings(@Param('orgId') orgId: string) {
     return this.organizationService.getJobListings(orgId);

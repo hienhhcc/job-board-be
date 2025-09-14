@@ -156,12 +156,6 @@ export class JobListingService {
       };
     }
 
-    //TODO: AI Generation
-    await this.inngestService.inngest.send({
-      name: 'app/jobListingApplication.created',
-      data: { jobListingId, userId: auth.userId },
-    });
-
     return { success: true, data: insertedJobListingApplication };
   }
 }

@@ -239,6 +239,6 @@ export class OrganizationService {
         },
       });
 
-    return data;
+    return { success: true, data };
   }
 }
